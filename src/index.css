@@ -1,0 +1,138 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 0 0% 0%;
+    --foreground: 0 0% 96%;
+
+    --card: 0 0% 3%;
+    --card-foreground: 0 0% 96%;
+
+    --popover: 0 0% 3%;
+    --popover-foreground: 0 0% 96%;
+
+    --primary: 354 100% 50%;
+    --primary-foreground: 0 0% 96%;
+
+    --secondary: 0 0% 8%;
+    --secondary-foreground: 0 0% 96%;
+
+    --muted: 0 0% 8%;
+    --muted-foreground: 0 0% 64%;
+
+    --accent: 354 100% 50%;
+    --accent-foreground: 0 0% 96%;
+
+    --destructive: 354 100% 50%;
+    --destructive-foreground: 0 0% 96%;
+
+    --border: 0 0% 18%;
+    --input: 0 0% 18%;
+    --ring: 354 100% 50%;
+
+    --radius: 1rem;
+
+    --sidebar-background: 0 0% 3%;
+    --sidebar-foreground: 0 0% 96%;
+    --sidebar-primary: 354 100% 50%;
+    --sidebar-primary-foreground: 0 0% 96%;
+    --sidebar-accent: 0 0% 8%;
+    --sidebar-accent-foreground: 0 0% 96%;
+    --sidebar-border: 0 0% 18%;
+    --sidebar-ring: 354 100% 50%;
+
+    --success: 354 100% 50%;
+  }
+
+  * {
+    @apply border-border;
+    cursor: url('/hamburger-cursor.svg') 16 16, auto;
+  }
+
+  /* Cursor para elementos interactivos */
+  button, a, input, textarea, select, [role="button"], [tabindex]:not([tabindex="-1"]) {
+    cursor: url('/hamburger-cursor.svg') 16 16, pointer;
+  }
+
+  /* Cursor para texto */
+  input[type="text"], input[type="email"], input[type="password"], input[type="search"], textarea {
+    cursor: url('/hamburger-cursor.svg') 16 16, text;
+  }
+
+  body {
+    @apply bg-background text-foreground font-sans antialiased;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-family: 'Bebas Neue', sans-serif;
+    letter-spacing: 0.02em;
+  }
+}
+
+@layer utilities {
+  .text-gradient-red {
+    @apply bg-clip-text text-transparent;
+    background-image: linear-gradient(135deg, #f1021A, #f1021A);
+  }
+
+  .glow-red {
+    box-shadow: 0 0 20px rgba(241, 2, 26, 0.15);
+  }
+
+  .hover-glow-red {
+    transition: box-shadow 0.3s ease;
+  }
+  .hover-glow-red:hover {
+    box-shadow: 0 0 25px rgba(241, 2, 26, 0.25);
+  }
+
+  .section-padding {
+    @apply py-16 md:py-24 px-4 md:px-8;
+  }
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+/* Animaciones para Ticker Banner */
+@keyframes slide-left {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(-50%);
+  }
+}
+
+@keyframes spin-slow {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+.animate-slide-left {
+  animation: slide-left 25s linear infinite;
+  width: fit-content;
+}
+
+.animate-spin-slow {
+  animation: spin-slow 2s linear infinite;
+}
+
+/* Pausar animación en hover */
+.animate-slide-left:hover {
+  animation-play-state: paused;
+}
+
+/* Ajustar velocidad para móvil */
+@media (max-width: 768px) {
+  .animate-slide-left {
+    animation-duration: 20s;
+  }
+}
