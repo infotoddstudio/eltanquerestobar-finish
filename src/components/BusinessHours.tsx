@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Clock, MapPin, RefreshCw } from 'lucide-react';
-import { getOpeningHours, getCurrentStatus, formatOpeningHours } from '../services/googlePlacesService';
+import { formatOpeningHours } from '../services/googlePlacesService';
 import { GOOGLE_CONFIG, validateGoogleConfig } from '../config/googleConfig';
 
 interface BusinessHoursProps {
@@ -8,59 +8,72 @@ interface BusinessHoursProps {
 }
 
 const BusinessHours = ({ placeId }: BusinessHoursProps) => {
-  const [hours, setHours] = useState<any>(null);
-  const [currentStatus, setCurrentStatus] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [refreshing, setRefreshing] = useState(false);
+  const [currentStatus, setCurrentStatus] = useState<{
+    isOpen: boolean;
+    status: string;
+    color: string;
+    message: string;
+  } | null>(null);
+  const [openingHours, setOpeningHours] = useState<any[]>([]);
 
-  // Función para obtener el horario
+  // Función segura para obtener datos del backend
   const fetchBusinessHours = async () => {
+    setLoading(true);
+    setError(null);
+    
     try {
-      if (refreshing) setRefreshing(true);
-      if (!refreshing) setLoading(true);
-      setError(null);
-
-      // Validar configuración
-      const config = validateGoogleConfig();
-      if (!config.isValid) {
-        throw new Error(`Configuración incompleta: faltan ${config.missing.join(', ')}`);
-      }
-
-      // Obtener horario desde Google
-      const hoursResponse = await getOpeningHours(placeId);
+      const response = await fetch(GOOGLE_CONFIG.BACKEND_ENDPOINT, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          // Añadir headers de seguridad si es necesario
+          'X-Requested-With': 'XMLHttpRequest',
+        },
+        credentials: 'same-origin', // Solo mismo origen
+      });
       
-      if (hoursResponse.success) {
-        setHours(hoursResponse.data);
-        // Obtener estado actual
-        const status = await getCurrentStatus(placeId);
-        setCurrentStatus(status);
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      
+      const data = await response.json();
+      
+      if (data.success) {
+        setOpeningHours(formatOpeningHours(data.data));
+        setCurrentStatus({
+          isOpen: data.isOpenNow || false,
+          status: data.isOpenNow ? 'Abierto ahora' : 'Cerrado',
+          color: data.isOpenNow ? 'text-green-500' : 'text-red-500',
+          message: data.isOpenNow ? 
+            'El restaurante está abierto' : 
+            'El restaurante está cerrado',
+        });
       } else {
-        throw new Error(hoursResponse.error);
+        throw new Error(data.error || 'Error al cargar datos');
       }
     } catch (err) {
       console.error('Error fetching business hours:', err);
       setError(err instanceof Error ? err.message : 'Error desconocido');
     } finally {
       setLoading(false);
-      setRefreshing(false);
     }
   };
 
-  // Cargar datos al montar el componente
   useEffect(() => {
+    // Validar configuración (solo en desarrollo)
+    const validation = validateGoogleConfig();
+    if (!validation.isValid && process.env.NODE_ENV === 'development') {
+      setError(`Configuración incompleta: ${validation.missing.join(', ')}`);
+      setLoading(false);
+      return;
+    }
+    
     fetchBusinessHours();
-
-    // Recargar cada hora para mantener datos actualizados
-    const interval = setInterval(fetchBusinessHours, 60 * 60 * 1000);
-    return () => clearInterval(interval);
   }, [placeId]);
 
-  // Formatear horario para mostrar
-  const formattedHours = hours ? formatOpeningHours(hours) : [];
-
-  // Renderizado del componente
-  if (loading && !refreshing) {
+  if (loading) {
     return (
       <div className="bg-black/50 border border-white/20 rounded-xl p-6">
         <div className="flex items-center gap-2 mb-4">
@@ -114,45 +127,28 @@ const BusinessHours = ({ placeId }: BusinessHoursProps) => {
         )}
       </div>
 
-      {/* Horario de la semana */}
-      {formattedHours.length > 0 && (
-        <div className="space-y-2">
-          {formattedHours.map((dayInfo: any, index: number) => (
-            <div key={index} className="flex justify-between items-center py-2 border-b border-white/10 last:border-0">
-              <span className="text-white font-medium">
-                {dayInfo.dayName}
-              </span>
-              <span className="text-white/60 text-sm">
-                {dayInfo.hours}
-              </span>
-            </div>
-          ))}
-        </div>
-      )}
+      {/* Horario semanal */}
+      <div className="space-y-2">
+        {openingHours.map((day, index) => (
+          <div key={index} className="flex justify-between text-sm">
+            <span className="text-white/80">{day.dayName}</span>
+            <span className="text-white/60">{day.hours}</span>
+          </div>
+        ))}
+      </div>
 
       {/* Información adicional */}
-      <div className="mt-4 pt-4 border-t border-white/20">
-        <div className="flex items-center justify-between">
-          <p className="text-xs text-white/40">
-            Sincronizado con Google Business Profile
-          </p>
-          <button 
-            onClick={fetchBusinessHours}
-            disabled={refreshing}
-            className="flex items-center gap-1 text-xs text-[#f1021A] hover:text-[#d01815] transition-colors disabled:opacity-50"
-          >
-            <RefreshCw className={`w-3 h-3 ${refreshing ? 'animate-spin' : ''}`} />
-            {refreshing ? 'Actualizando...' : 'Actualizar'}
-          </button>
-        </div>
-        
-        {/* Información de configuración para desarrollo */}
-        {process.env.NODE_ENV === 'development' && (
-          <div className="mt-3 p-2 bg-yellow-500/10 rounded text-xs text-yellow-400">
-            <p>Place ID: {placeId || GOOGLE_CONFIG.PLACE_ID}</p>
-            <p>API Key: {GOOGLE_CONFIG.API_KEY ? 'Configurada' : 'No configurada'}</p>
-          </div>
-        )}
+      <div className="mt-4 pt-4 border-t border-white/10">
+        <p className="text-xs text-white/40 text-center">
+          Horario sincronizado con Google Business Profile
+        </p>
+        <button 
+          onClick={fetchBusinessHours}
+          className="mt-2 w-full text-xs text-white/40 hover:text-white/60 transition-colors flex items-center justify-center gap-1"
+        >
+          <RefreshCw size={12} />
+          Actualizar horario
+        </button>
       </div>
     </div>
   );

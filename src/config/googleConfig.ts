@@ -1,31 +1,35 @@
-// Configuración para Google Places API
+// Configuración para Google Places API - MOVIDA A BACKEND POR SEGURIDAD
 export const GOOGLE_CONFIG = {
-  // Place ID de El Tanque Restobar (debe obtenerse desde Google Business Profile)
-  PLACE_ID: process.env.REACT_APP_GOOGLE_PLACE_ID || 'ChIJY4R4K6sQg0R5J8X7Q8X7Q',
-  
-  // API Key de Google Maps (debe configurarse en variables de entorno)
-  API_KEY: process.env.REACT_APP_GOOGLE_API_KEY || '',
-  
-  // URL base de la API
+  // URL base de la API - SOLO PARA REFERENCIA
   BASE_URL: 'https://maps.googleapis.com/maps/api',
   
-  // Campos que queremos obtener
+  // Campos que queremos obtener - SOLO PARA REFERENCIA
   FIELDS: 'opening_hours,name,formatted_address,formatted_phone_number',
   
   // Configuración de caché (en minutos)
   CACHE_DURATION: 60, // 1 hora
+  
+  // IMPORTANTE: PLACE_ID y API_KEY han sido movidos al backend
+  // por seguridad para evitar exposición en frontend
+  BACKEND_ENDPOINT: '/api/places/hours', // Endpoint seguro del servidor
 };
 
-// Función para validar la configuración
+// Función para validar la configuración (solo para desarrollo)
 export const validateGoogleConfig = () => {
-  const missing = [];
-  
-  if (!GOOGLE_CONFIG.PLACE_ID || GOOGLE_CONFIG.PLACE_ID === 'ChIJY4R4K6sQg0R5J8X7Q8X7Q') {
-    missing.push('PLACE_ID');
+  // En producción, toda la validación se hace en backend
+  if (process.env.NODE_ENV === 'production') {
+    return {
+      isValid: true, // Siempre válido en producción (backend maneja)
+      missing: [],
+      message: 'Configuración manejada por backend'
+    };
   }
   
-  if (!GOOGLE_CONFIG.API_KEY) {
-    missing.push('API_KEY');
+  // En desarrollo, verificar que tengamos endpoint
+  const missing = [];
+  
+  if (!GOOGLE_CONFIG.BACKEND_ENDPOINT) {
+    missing.push('BACKEND_ENDPOINT');
   }
   
   return {
