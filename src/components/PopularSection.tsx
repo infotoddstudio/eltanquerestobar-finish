@@ -7,7 +7,7 @@ import cheesecakeImg from "@/assets/tarta.png";
 
 const items = [
   { img: nachosImg, title: "Nachos para compartir", desc: "Abundantes, perfectos para empezar." },
-  { img: smashImg, title: "Burgers Smash", desc: "Jugosas, a la plancha con su costra." },
+  { img: smashImg, title: "El Cuñao Smash", desc: "Jugosas, a la plancha con su costra." },
   { img: nonnaImg, title: "Nonna", desc: "La burger destacada por nuestros clientes." },
   { img: cheesecakeImg, title: "Tarta de queso casera", desc: "El final redondo para tu cena." },
 ];
